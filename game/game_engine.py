@@ -1,3 +1,4 @@
+import math
 import random
 import pygame
 from game.text_box import TextBox
@@ -21,6 +22,10 @@ class GameEngine:
         self.hint_penalty = 1
         self.hints_used = 0
 
+        self.round_seconds = 20
+        self.round_start_ms = 0
+        self.time_left = self.round_seconds
+
         self.font_title = pygame.font.SysFont(None, 40)
         self.font_word = pygame.font.SysFont(None, 52)
         self.font_msg = pygame.font.SysFont(None, 26)
@@ -40,6 +45,8 @@ class GameEngine:
         self.secret_word = random.choice(self.words)
         self.scrambled_word = self.scramble_string(self.secret_word)
         self.hints_used = 0
+        self.round_start_ms = pygame.time.get_ticks()
+        self.time_left = self.round_seconds
         self.input_box.clear()
 
     def submit_guess(self):
@@ -72,6 +79,11 @@ class GameEngine:
         self.feedback_msg = f"Hint used! -{self.hint_penalty} point"
         self.feedback_color = (240, 170, 50)
 
+    def time_up(self):
+        self.feedback_msg = f"TIME'S UP! The word was '{self.secret_word}'."
+        self.feedback_color = (240, 80, 80)
+        self.next_round()
+
     def handle_event(self, event):
         self.input_box.handle_event(event)
 
@@ -84,7 +96,10 @@ class GameEngine:
                 self.use_hint()
 
     def update(self):
-        pass
+        elapsed = (pygame.time.get_ticks() - self.round_start_ms) / 1000
+        self.time_left = max(0, self.round_seconds - elapsed)
+        if self.time_left <= 0:
+            self.time_up()
 
     def render(self, screen):
         screen.fill((26, 30, 38))
@@ -121,3 +136,21 @@ class GameEngine:
             )
             hint_surf = self.font_word.render(pattern, True, (255, 200, 90))
             screen.blit(hint_surf, (self.width // 2 - hint_surf.get_width() // 2, 335))
+
+        seconds = math.ceil(self.time_left)
+        if self.time_left > self.round_seconds * 0.5:
+            bar_color = (80, 230, 110)
+        elif self.time_left > self.round_seconds * 0.25:
+            bar_color = (240, 170, 50)
+        else:
+            bar_color = (240, 80, 80)
+
+        timer_surf = self.font_msg.render(f"Time left: {seconds}s", True, bar_color)
+        screen.blit(timer_surf, (self.width // 2 - timer_surf.get_width() // 2, 405))
+
+        bar_bg = pygame.Rect(self.width // 2 - 150, 435, 300, 18)
+        bar_fill = pygame.Rect(bar_bg.x, bar_bg.y, int(bar_bg.width * self.time_left / self.round_seconds), bar_bg.height)
+        pygame.draw.rect(screen, (55, 60, 72), bar_bg, border_radius=6)
+        if bar_fill.width > 0:
+            pygame.draw.rect(screen, bar_color, bar_fill, border_radius=6)
+        pygame.draw.rect(screen, (220, 220, 220), bar_bg, width=2, border_radius=6)
