@@ -1,5 +1,13 @@
 # Word Scramble Repair Lab
 
+## Student Details
+
+Name: Nithin Kumar
+SRN: PES1UG25CS829
+Section: I
+
+# Word Scramble Repair Lab
+
 This project is an interactive anagram deduction word puzzle game using **Pygame**. It introduces students to string permutation, randomized list shuffling, uppercase letter sanitization, and text-box widget integration within an object-oriented codebase.
 ---
 
